@@ -1,5 +1,9 @@
 import csv
 import os
+import ConfigParser
+import json
+from collections import defaultdict
+import operator
 
 class LogEntry:
     def __init__(self, characterName, accountName, time, item, itemCount, resource, resourceQuantity, donorGuild, recipientGuild):
@@ -20,7 +24,7 @@ def readFile(filename):
     lines = []
 
     with open(filename, 'rb') as log:
-        reader = csv.reader(log, delimiter=',')
+        reader = csv.reader(log, delimiter=',', quotechar='"')
         for line in reader:
             lines.append(line)
 
@@ -53,14 +57,43 @@ def objectify(log):
 def filterEntries(log, resourceList):
     return [e for e in log if e.resource in resourceList]
 
+def applyMultipliers(log, multipliers):
+    for entry in log:
+        entry.resourceQuantity *= multipliers[entry.resource]
+
+    return log
+
+def sumByAccount(log):
+    total = defaultdict(lambda: 0)
+
+    for entry in log:
+        total[entry.accountName] += int(entry.resourceQuantity)
+
+    return total
+
+def printLeaderboard(totals):
+    sortedTotals = sorted(totals.items(), key=operator.itemgetter(1))
+    sortedTotals.reverse()
+    
+    for account, total in sortedTotals:
+        print(account + ": " + str(total))
+
 if __name__ == '__main__':
-    path = './logs'  # TODO: make configurable
+    config = ConfigParser.ConfigParser()
+    config.read('./config')
+    path = config.get('OPTIONS', 'LogLocation')
+
     logfiles = globDirectory(path)
     log = []
     
     for f in logfiles:
         log = combineLogs(log, readFile(path + os.sep + f))
 
+    resourceTypes = json.loads(config.get('OPTIONS', 'ResourceTypes'))
+    resourceMultipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
+
     log = objectify(log)
-    log = filterEntries(log, ["Treasures of Tyranny"])
-    print(log)
+    log = filterEntries(log, resourceTypes)
+    log = applyMultipliers(log, dict(zip(resourceTypes, resourceMultipliers)))
+    log = sumByAccount(log)
+    printLeaderboard(log)
