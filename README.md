@@ -43,3 +43,8 @@ Some entries also do not have a username associated with them.
 These appear to be entries from before the update that inlcuded the export command.
 It's expected that, over time, these log entires will be overwritten by newer ones, and therefore exported logs won't include any entries that don't have usernames.
 Until then, you'll just have to deal with it the way it is :)
+
+## Known issues (things I will fix)
+- Can't currently filter entries based on the guild that donated or the guild that is being donated to. This feature is necessary because you might not want to include donations that came from other guilds, or donations that went to other guilds.
+- Can't currently filter based on timestamps. This feature is necessary because the exported logs might include records from days/times you don't care about.
+- Can't currently apply different resource filters to different time ranges. Contests I run have different resource targets at different times - only these resources count for "points" during those time ranges. I need to be able to do time-based resource filtering to accommodate this.

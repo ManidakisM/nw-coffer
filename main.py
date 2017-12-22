@@ -53,6 +53,9 @@ def objectify(log):
 
     return l
 
+def getTimeSlice(log, startTime, endTime):
+    pass
+
 """Filter entries to include only donations of the types specified in resourceList"""
 def filterEntries(log, resourceList):
     return [e for e in log if e.resource in resourceList]
