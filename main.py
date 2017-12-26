@@ -106,7 +106,7 @@ def loadLogfiles(path):
     log = objectify(log)
     return log
 
-def applyFilters(log, filters):
+def applyResourceFilters(log, filters):
     """ Filter resources based on time slice and resource type """
     filteredLog = []
 
@@ -117,15 +117,31 @@ def applyFilters(log, filters):
 
     return filteredLog
 
+def filterDonorGuild(log, guild):
+    if guild:
+        return [e for e in log if e.donorGuild == guild]
+    else:
+        return log
+
+def filterRecipientGuild(log, guild):
+    if guild:
+        return [e for e in log if e.recipientGuild == guild]
+    else:
+        return log
+
 if __name__ == '__main__':
     config = ConfigParser.ConfigParser()
     config.read('./config')
     path = config.get('OPTIONS', 'LogLocation')
     filters = json.loads(config.get('OPTIONS', 'ResourceFilters'))
     multipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
+    recipientGuild = json.loads(config.get('OPTIONS', 'recipientGuild'))
+    donorGuild = json.loads(config.get('OPTIONS', 'donorGuild'))
 
     log = loadLogfiles(path)
-    log = applyFilters(log, filters)
+    log = filterRecipientGuild(log, recipientGuild)
+    log = filterDonorGuild(log, donorGuild)
+    log = applyResourceFilters(log, filters)
     # Apply multipliers to adjust how much each resource is worth in terms of points
     resourceMultipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
     log = applyMultipliers(log, multipliers)
