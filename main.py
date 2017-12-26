@@ -4,6 +4,7 @@ import ConfigParser
 import json
 from collections import defaultdict
 import operator
+import datetime
 
 class LogEntry:
     def __init__(self, characterName, accountName, time, item, itemCount, resource, resourceQuantity, donorGuild, recipientGuild):
@@ -54,7 +55,19 @@ def objectify(log):
     return l
 
 def getTimeSlice(log, startTime, endTime):
-    pass
+    entries = []
+    print(startTime)
+    print(endTime)
+    dateFormat = '%m/%d/%Y %I:%M:%S %p'
+    start = datetime.datetime.strptime(startTime, dateFormat)
+    end = datetime.datetime.strptime(endTime, dateFormat)
+
+    for entry in log:
+        timestamp = datetime.datetime.strptime(entry.time, dateFormat)
+        if (timestamp >= start and timestamp <= end):
+            entries.append(entry)
+
+    return entries
 
 """Filter entries to include only donations of the types specified in resourceList"""
 def filterEntries(log, resourceList):
@@ -81,22 +94,42 @@ def printLeaderboard(totals):
     for account, total in sortedTotals:
         print(account + ": " + str(total))
 
-if __name__ == '__main__':
-    config = ConfigParser.ConfigParser()
-    config.read('./config')
-    path = config.get('OPTIONS', 'LogLocation')
-
+def loadLogfiles(path):
+    # load the log files and get them into one array
     logfiles = globDirectory(path)
     log = []
     
     for f in logfiles:
-        log = combineLogs(log, readFile(path + os.sep + f))
-
-    resourceTypes = json.loads(config.get('OPTIONS', 'ResourceTypes'))
-    resourceMultipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
+        # Read the log file, but slice off the header (the first line)
+        log = combineLogs(log, readFile(path + os.sep + f)[1:])
 
     log = objectify(log)
-    log = filterEntries(log, resourceTypes)
-    log = applyMultipliers(log, dict(zip(resourceTypes, resourceMultipliers)))
+    return log
+
+def applyFilters(log, filters):
+    """ Filter resources based on time slice and resource type """
+    filteredLog = []
+
+    for dates, resources in filters:
+        entries = getTimeSlice(log, dates[0], dates[1])
+        entries = filterEntries(entries, resources)
+        filteredLog.extend(entries)
+
+    return filteredLog
+
+if __name__ == '__main__':
+    config = ConfigParser.ConfigParser()
+    config.read('./config')
+    path = config.get('OPTIONS', 'LogLocation')
+    filters = json.loads(config.get('OPTIONS', 'ResourceFilters'))
+    multipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
+
+    log = loadLogfiles(path)
+    log = applyFilters(log, filters)
+    # Apply multipliers to adjust how much each resource is worth in terms of points
+    resourceMultipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
+    log = applyMultipliers(log, multipliers)
+
+    # Add totals up per account and print
     log = sumByAccount(log)
     printLeaderboard(log)

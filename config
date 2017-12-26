@@ -1,24 +1,6 @@
 [OPTIONS]
 LogLocation: ./logs
-ResourceFilters: [
-    [["11/21/2017 5:45:25 PM", "11/21/2017 5:54:00 PM"], ["Influence"]]
-]
-ResourceMultipliers: {
-    "Heroic Shard of Power":1,
-    "Adventurer's Shard of Power":1,
-    "Dungeoneer's Shard of Power":1,
-    "Conqueror's Shard of Power":1,
-    "Labor":1,
-    "Gold":1,
-    "Glory":1,
-    "Gems":1,
-    "Surplus Equipment":1,
-    "Astral Diamond Chests":1,
-    "Treasures of Tyranny":1,
-    "Frozen Treasures":1,
-    "Fey Trinkets":1,
-    "Dark Gifts":1,
-    "Influence":1
-}
+ResourceFilters: [[["11/21/2017 5:45:25 PM", "11/21/2017 5:54:00 PM"], ["Influence"]]]
+ResourceMultipliers: {"Heroic Shard of Power": 1, "Adventurer's Shard of Power": 1, "Dungeoneer's Shard of Power": 1, "Conqueror's Shard of Power": 1, "Labor": 1, "Gold": 1, "Glory": 1, "Gems": 1, "Surplus Equipment": 1, "Astral Diamond Chests": 1, "Treasures of Tyranny": 1, "Frozen Treasures": 1, "Fey Trinkets": 1, "Dark Gifts": 1, "Influence": 1}
 DonorGuild:"Ardent Justice HQ"
 RecipientGuild:"Ardent Justice HQ"
