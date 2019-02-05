@@ -1,4 +1,3 @@
 [OPTIONS]
 LogLocation: ./logs
-ResourceTypes: ["Heroic Shard of Power", "Adventurer's Shard of Power", "Dungeoneer's Shard of Power", "Conqueror's Shard of Power", "Labor", "Gold", "Glory", "Gems", "Surplus Equipment", "Astral Diamond Chests", "Treasures of Tyranny", "Frozen Treasures", "Fey Trinkets", "Dark Gifts", "Influence"]
-ResourceMultipliers: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+ResourceTypes: ["Heroic Shard of Power", "Adventurer's Shard of Power", "Dungeoneer's Shard of Power", "Conqueror's Shard of Power", "Professions Supplies", "Gold", "Glory", "Gems", "Surplus Equipment", "Astral Diamond Chests", "Treasures of Tyranny", "Frozen Treasures", "Fey Trinkets", "Dark Gifts", "Influence"]

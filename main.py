@@ -1,9 +1,11 @@
 import csv
 import os
-import ConfigParser
+import configparser
 import json
 from collections import defaultdict
 import operator
+from prettytable import PrettyTable
+import argparse
 
 class LogEntry:
     def __init__(self, characterName, accountName, time, item, itemCount, resource, resourceQuantity, donorGuild, recipientGuild):
@@ -23,7 +25,7 @@ class LogEntry:
 def readFile(filename):
     lines = []
 
-    with open(filename, 'rb') as log:
+    with open(filename, 'r') as log:
         reader = csv.reader(log, delimiter=',', quotechar='"')
         for line in reader:
             lines.append(line)
@@ -57,29 +59,54 @@ def objectify(log):
 def filterEntries(log, resourceList):
     return [e for e in log if e.resource in resourceList]
 
-def applyMultipliers(log, multipliers):
-    for entry in log:
-        entry.resourceQuantity *= multipliers[entry.resource]
-
-    return log
-
-def sumByAccount(log):
-    total = defaultdict(lambda: 0)
+def sumByAccount(log, resourceTypes):
+    total = defaultdict(list)
 
     for entry in log:
-        total[entry.accountName] += int(entry.resourceQuantity)
+        for resource in resourceTypes:
+            if resourceTypes.index(resource) not in total[entry.accountName]:
+                total[entry.accountName].append(resourceTypes.index(resource))
+
+    for entry in log:
+        for resource in resourceTypes:
+                total[entry.accountName][resourceTypes.index(resource)] = 0
+
+    for entry in log:
+        total[entry.accountName][resourceTypes.index(entry.resource)] += int(entry.resourceQuantity)
 
     return total
 
-def printLeaderboard(totals):
-    sortedTotals = sorted(totals.items(), key=operator.itemgetter(1))
-    sortedTotals.reverse()
+def printLeaderboard(totals, resourceTypes, outputfile):
+    headers = ['Account']
+    i = 1
+    for resource in resourceTypes:
+        headers.insert(i, resource)
+        i += 1
+
+    table = PrettyTable(headers)
     
-    for account, total in sortedTotals:
-        print(account + ": " + str(total))
+    for account in totals:
+        row = [account]
+        i = 1
+        for resource in totals[account]:
+            row.insert(i, resource)
+            i += 1
+
+        table.add_row(row)
+
+    table_txt = table.get_string()
+    with open(outputfile, 'w') as file:
+        file.write(table_txt)
 
 if __name__ == '__main__':
-    config = ConfigParser.ConfigParser()
+
+    parser = argparse.ArgumentParser(description='Neverwinter donations parser')
+    parser.add_argument('outputfile', help='Specify the output file')
+    args = parser.parse_args()
+
+    outputfile = args.outputfile
+
+    config = configparser.ConfigParser()
     config.read('./config')
     path = config.get('OPTIONS', 'LogLocation')
 
@@ -90,10 +117,8 @@ if __name__ == '__main__':
         log = combineLogs(log, readFile(path + os.sep + f))
 
     resourceTypes = json.loads(config.get('OPTIONS', 'ResourceTypes'))
-    resourceMultipliers = json.loads(config.get('OPTIONS', 'ResourceMultipliers'))
 
     log = objectify(log)
     log = filterEntries(log, resourceTypes)
-    log = applyMultipliers(log, dict(zip(resourceTypes, resourceMultipliers)))
-    log = sumByAccount(log)
-    printLeaderboard(log)
+    log = sumByAccount(log, resourceTypes)
+    printLeaderboard(log, resourceTypes, outputfile)
