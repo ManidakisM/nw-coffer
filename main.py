@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
         data[entry.accountName][resourceTypes.index(entry.resource)] += int(entry.resourceQuantity)
 
-    # export into a pretty table the data
+    # export data into a pretty table
     table = PrettyTable(['Account', *resourceTypes])
     for account in data:
         table.add_row([account, *data[account]])
