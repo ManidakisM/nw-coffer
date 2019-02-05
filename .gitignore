@@ -102,4 +102,4 @@ ENV/
 
 output.txt
 .vscode
-logs/*.csv
+logs/*

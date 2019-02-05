@@ -8,18 +8,16 @@ from prettytable import PrettyTable
 import argparse
 
 class LogEntry:
-    def __init__(self, characterName, accountName, time, item, itemCount, resource, resourceQuantity, donorGuild, recipientGuild):
-        # TODO: There is a trick I've forgotten that lets you assign object attributes based on the name
-        # of the arguments coming in... would be better than this. Then if the format of the CSV changes
-        # we only need to change the constructor signature, and not the constructor itself.
-        self.characterName = characterName
-        self.accountName = accountName
-        self.time = time
-        self.itemCount = itemCount
-        self.resource = resource
-        self.resourceQuantity = resourceQuantity
-        self.donorGuild = donorGuild
-        self.recipientGuild = recipientGuild
+    def __init__(self, *args):
+        (self.characterName, 
+        self.accountName, 
+        self.time, 
+        self.item, 
+        self.itemCount, 
+        self.resource, 
+        self.resourceQuantity, 
+        self.donorGuild, 
+        self.recipientGuild) = args
 
 """Reads a log file, returning a list of lists with the log entries"""
 def readFile(filename):
@@ -33,9 +31,9 @@ def readFile(filename):
     return lines
 
 # Credit to https://stackoverflow.com/questions/3207219/how-do-i-list-all-files-of-a-directory
-"""Returns the names of all of the files in a directory"""
+"""Returns the names of all of the files in a directory with '.csv' extension"""
 def globDirectory(path):
-    return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.endswith(".csv")]
 
 """Combine two log files, returning the unique entries in each"""
 def combineLogs(log1, log2):
@@ -101,7 +99,7 @@ def printLeaderboard(totals, resourceTypes, outputfile):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Neverwinter donations parser')
-    parser.add_argument('outputfile', help='Specify the output file')
+    parser.add_argument('outputfile', nargs='?', help='Specify the output file (defaults to "output.txt")', default="output.txt")
     args = parser.parse_args()
 
     outputfile = args.outputfile
@@ -112,7 +110,11 @@ if __name__ == '__main__':
 
     logfiles = globDirectory(path)
     log = []
-    
+
+    if not logfiles:
+        print("No log files found in: " + path)
+        exit()
+
     for f in logfiles:
         log = combineLogs(log, readFile(path + os.sep + f))
 
