@@ -103,3 +103,4 @@ ENV/
 output.txt
 .vscode
 logs/*
+combined_logs.csv
