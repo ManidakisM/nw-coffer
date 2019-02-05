@@ -61,15 +61,9 @@ def sumByAccount(log, resourceTypes):
     total = defaultdict(list)
 
     for entry in log:
-        for resource in resourceTypes:
-            if resourceTypes.index(resource) not in total[entry.accountName]:
-                total[entry.accountName].append(resourceTypes.index(resource))
+        if not total[entry.accountName]:
+            total[entry.accountName].extend([0] * len(resourceTypes))
 
-    for entry in log:
-        for resource in resourceTypes:
-                total[entry.accountName][resourceTypes.index(resource)] = 0
-
-    for entry in log:
         total[entry.accountName][resourceTypes.index(entry.resource)] += int(entry.resourceQuantity)
 
     return total
