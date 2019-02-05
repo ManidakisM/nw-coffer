@@ -19,44 +19,13 @@ class LogEntry:
         self.donorGuild, 
         self.recipientGuild) = args
 
-"""Reads a log file, returning a list of lists with the log entries"""
+# Open a the log file and return the lines in a list
 def readFile(filename):
-    lines = []
-
     with open(filename, 'r') as log:
         reader = csv.reader(log, delimiter=',', quotechar='"')
-        for line in reader:
-            lines.append(line)
+        return [l for l in reader]
 
-    return lines
-
-# Credit to https://stackoverflow.com/questions/3207219/how-do-i-list-all-files-of-a-directory
-"""Returns the names of all of the files in a directory with '.csv' extension"""
-def globDirectory(path):
-    return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.endswith(".csv")]
-
-"""Combine two log files, returning the unique entries in each"""
-def combineLogs(log1, log2):
-    log1.extend(log2)
-    # Credit to https://stackoverflow.com/questions/3724551/python-uniqueness-for-list-of-lists
-    combined = [list(i) for i in set(tuple(i) for i in log1)]
-    return combined
-
-"""
-Takes a list of lists, and returns a list of objects, where each object is a representation of a row in
- the log file
-"""
-def objectify(log):
-    l = []
-    for entry in log:
-        l.append(LogEntry(*tuple(entry)))
-
-    return l
-
-"""Filter entries to include only donations of the types specified in resourceList"""
-def filterEntries(log, resourceList):
-    return [e for e in log if e.resource in resourceList]
-
+# sum all resouce quantities by account and type of resource
 def sumByAccount(log, resourceTypes):
     total = defaultdict(list)
 
@@ -68,27 +37,17 @@ def sumByAccount(log, resourceTypes):
 
     return total
 
+# print into a nice format the data
 def printLeaderboard(totals, resourceTypes, outputfile):
-    headers = ['Account']
-    i = 1
-    for resource in resourceTypes:
-        headers.insert(i, resource)
-        i += 1
-
-    table = PrettyTable(headers)
+    table = PrettyTable(['Account', *resourceTypes])
     
     for account in totals:
-        row = [account]
-        i = 1
-        for resource in totals[account]:
-            row.insert(i, resource)
-            i += 1
-
-        table.add_row(row)
+        table.add_row([account, *totals[account]])
 
     table_txt = table.get_string()
     with open(outputfile, 'w') as file:
         file.write(table_txt)
+
 
 if __name__ == '__main__':
 
@@ -102,19 +61,27 @@ if __name__ == '__main__':
     config.read('./config')
     path = config.get('OPTIONS', 'LogLocation')
 
-    logfiles = globDirectory(path)
+    # get all the logfiles with .csv extension
+    logfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.endswith(".csv")]
     log = []
 
     if not logfiles:
         print("No log files found in: " + path)
         exit()
 
+    # combine all the log files in the logs directory
     for f in logfiles:
-        log = combineLogs(log, readFile(path + os.sep + f))
+        tempLog = log
+        tempLog.extend(readFile(path + os.sep + f))
+        log = [list(i) for i in set(tuple(i) for i in tempLog)]
 
     resourceTypes = json.loads(config.get('OPTIONS', 'ResourceTypes'))
 
-    log = objectify(log)
-    log = filterEntries(log, resourceTypes)
+    # convert to a list of objects
+    log = [LogEntry(*tuple(e)) for e in log]
+
+    # keep only the data for the resource types specified in the config
+    log = [e for e in log if e.resource in resourceTypes]
+    
     log = sumByAccount(log, resourceTypes)
     printLeaderboard(log, resourceTypes, outputfile)
